@@ -1,3 +1,6 @@
 spring:
   application:
     name: StudentPulse API
+spring:
+  profiles:
+    active: dev,staging,single-server
