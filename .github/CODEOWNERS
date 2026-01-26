@@ -1,0 +1,4 @@
+# Require coach review for everything under candidates
+candidates/** @coach
+assignments/** @coach
+docs/** @coach
