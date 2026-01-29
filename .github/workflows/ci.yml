@@ -1,21 +1,84 @@
-name: CI
+name: Candidate CI (changed folders)
 
 on:
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  build:
+  candidate-tests:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # required to diff base/head
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
+          cache: "maven"
 
-      - name: Build and test
-        run: mvn test
+      - name: Detect changed candidate folders
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
+          echo "Base: $BASE_SHA"
+          echo "Head: $HEAD_SHA"
+
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+          echo "$CHANGED_FILES" | sed 's/^/CHANGED: /'
+
+          # Extract candidate names from paths like candidates/<name>/...
+          # Ignore candidates/_shared
+          CANDIDATES="$(echo "$CHANGED_FILES" \
+            | grep -E '^candidates/[^/]+/' || true \
+            | cut -d/ -f2 \
+            | grep -v '^_shared$' \
+            | sort -u \
+            | tr '\n' ' ')"
+
+          if [ -z "${CANDIDATES// }" ]; then
+            echo "No candidate folder changes detected. Skipping Maven tests."
+            echo "candidates=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Detected candidate folders: $CANDIDATES"
+          echo "candidates=$CANDIDATES" >> "$GITHUB_OUTPUT"
+
+      - name: Run Maven tests for changed candidates
+        if: steps.detect.outputs.candidates != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for C in ${{ steps.detect.outputs.candidates }}; do
+            echo "=============================="
+            echo "Candidate: $C"
+            echo "Searching for pom.xml under candidates/$C ..."
+            echo "=============================="
+
+            # Find all pom.xml files under the candidate folder.
+            # This supports any app folder name: candidates/<name>/<some-app>/pom.xml
+            mapfile -t POMS < <(find "candidates/$C" -name pom.xml -type f | sort)
+
+            if [ "${#POMS[@]}" -eq 0 ]; then
+              echo "ERROR: No pom.xml found under candidates/$C"
+              echo "Expected something like: candidates/$C/<app-folder>/pom.xml"
+              exit 1
+            fi
+
+            for POM in "${POMS[@]}"; do
+              echo ""
+              echo "Running tests for: $POM"
+              mvn -f "$POM" -q test
+            done
+          done
