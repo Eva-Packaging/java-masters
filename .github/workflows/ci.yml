@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
           cache: "maven"
 
       - name: Detect changed candidate folders
@@ -37,12 +37,12 @@ jobs:
           DIFF_RANGE="origin/${BASE_REF}...HEAD"
 
           CHANGED_FILES="$(git diff --name-only "${DIFF_RANGE}" || true)"
+          echo "${CHANGED_FILES}" | sed 's/^/CHANGED: /'
 
-          # candidate names from candidates/<name>/...
-          # ignore candidates/_shared
+          # Extract just the candidate folder name (2nd path segment)
           CANDIDATES="$(echo "${CHANGED_FILES}" \
             | grep -E '^candidates/[^/]+/' || true \
-            | cut -d/ -f2 \
+            | awk -F/ '{print $2}' \
             | grep -v '^_shared$' \
             | sort -u)"
 
@@ -50,6 +50,7 @@ jobs:
 
           if [ -z "${CANDIDATES}" ]; then
             echo "has_candidates=false" >> "${GITHUB_OUTPUT}"
+            echo "No candidate folder changes detected."
           else
             echo "has_candidates=true" >> "${GITHUB_OUTPUT}"
             echo "Detected candidates:"
@@ -67,6 +68,7 @@ jobs:
 
             echo "=============================="
             echo "Candidate: $C"
+            echo "Searching for pom.xml under candidates/$C ..."
             echo "=============================="
 
             POMS_FOUND="$(find "candidates/$C" -name pom.xml -type f | sort || true)"
