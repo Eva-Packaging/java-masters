@@ -1,21 +1,88 @@
-name: CI
+name: Candidate CI (changed folders)
 
 on:
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  build:
+  candidate-tests:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
-          java-version: "17"
+          java-version: "21"
+          # cache: "maven"
 
-      - name: Build and test
-        run: mvn test
+      - name: Detect changed candidate folders
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_REF="${{ github.base_ref }}"
+          if [ -z "${BASE_REF}" ]; then
+            echo "ERROR: github.base_ref is empty. Workflow must run on pull_request."
+            exit 1
+          fi
+
+          git fetch origin "${BASE_REF}" --depth=1 || true
+          DIFF_RANGE="origin/${BASE_REF}...HEAD"
+
+          CHANGED_FILES="$(git diff --name-only "${DIFF_RANGE}" || true)"
+          echo "${CHANGED_FILES}" | sed 's/^/CHANGED: /'
+
+          # Extract just the candidate folder name (2nd path segment)
+          CANDIDATES="$(echo "${CHANGED_FILES}" \
+            | grep -E '^candidates/[^/]+/' || true \
+            | awk -F/ '{print $2}' \
+            | grep -v '^_shared$' \
+            | sort -u)"
+
+          printf "%s\n" "${CANDIDATES}" > changed_candidates.txt
+
+          if [ -z "${CANDIDATES}" ]; then
+            echo "has_candidates=false" >> "${GITHUB_OUTPUT}"
+            echo "No candidate folder changes detected."
+          else
+            echo "has_candidates=true" >> "${GITHUB_OUTPUT}"
+            echo "Detected candidates:"
+            cat changed_candidates.txt
+          fi
+
+      - name: Run Maven tests for changed candidates
+        if: steps.detect.outputs.has_candidates == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r C; do
+            [ -z "$C" ] && continue
+
+            echo "=============================="
+            echo "Candidate: $C"
+            echo "Searching for pom.xml under candidates/$C ..."
+            echo "=============================="
+
+            POMS_FOUND="$(find "candidates/$C" -name pom.xml -type f | sort || true)"
+
+            if [ -z "$POMS_FOUND" ]; then
+              echo "ERROR: No pom.xml found under candidates/$C"
+              echo "Expected: candidates/$C/<any-app-folder>/pom.xml"
+              exit 1
+            fi
+
+            echo "$POMS_FOUND" | while IFS= read -r POM; do
+              [ -z "$POM" ] && continue
+              echo "Running tests for: $POM"
+              mvn -f "$POM" -q test
+            done
+
+          done < changed_candidates.txt
