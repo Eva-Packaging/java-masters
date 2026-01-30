@@ -21,26 +21,22 @@ public class Task {
     @JoinColumn(name = "user_id")
     private User assignedTo;
 
+    public User getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(User assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
     // hibernate will use this constructor (no args)
     public Task() { }
 
-    public Task(long id, String title, String description, Status status, Instant createdAt, Instant updatedAt) {
-        // hibernate can generate id later
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.status = status;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.priority = Priority.LOW;
-        this.assignedTo = null;
-    }
-
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
