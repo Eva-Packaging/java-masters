@@ -48,12 +48,13 @@ public class TaskController {
     }
 
 
-
     public Task getTaskById(Long id) {
         return null;
     }
 
     public Task updateTaskStatus(Long taskID, Task.Status status) {
+        Task task = taskRepository.findById(taskID).orElse(null);
+        task.setStatus(status);
         return null;
     }
 
