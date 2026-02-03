@@ -7,10 +7,7 @@ import com.taskflow.taskflow.repositories.TaskRepository;
 import com.taskflow.taskflow.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +38,9 @@ public class TaskController {
         Optional<User> optionalUser = userRepository.findById(request.assignedUserId());
         optionalUser.ifPresentOrElse(
                 user -> {task.setAssignedTo(user);},
-                () -> {}
+                () -> {
+                    throw new RuntimeException("User not found");
+                }
         );
         taskRepository.save(task);
         return task;
@@ -52,11 +51,14 @@ public class TaskController {
         return null;
     }
 
-    public Task updateTaskStatus(Long taskID, Task.Status status) {
-        Task task = taskRepository.findById(taskID).orElse(null);
+    @PutMapping(value = "/{taskID}/status")
+    public Task updateTaskStatus(@PathVariable Long taskID, @RequestParam Task.Status status) {
+        Task task = taskRepository.findById(taskID).orElseThrow( () -> new RuntimeException("Task not found"));
         task.setStatus(status);
-        return null;
+        return task;
     }
+
+
 
     public List<Task> getTasksByUserID(Long userID) {
         return null;
