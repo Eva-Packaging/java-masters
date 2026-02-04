@@ -1,10 +1,3 @@
-Below is a **REST API reference** for **Project 1: Trade Breaks & Exception Management Console** aligned to the schema/workflows (queue → detail → assign → comment → resolve → audit/reporting) using **Spring Boot + REST + JWT/RBAC**. 
-
-Assume all endpoints are behind an API Gateway under:
-
-`/api/v1`
-
----
 
 ## Common Conventions
 
@@ -608,6 +601,4 @@ Most endpoints return:
 8. **Audit/Compliance** → `GET /exceptions/{id}/audit-events` + `GET /audit-events`
 9. **KPIs** → `GET /metrics/exceptions/summary`
 
----
 
-If you want the next deliverable, I can generate a **step-by-step roadmap** (setup → DB → services → security → UI → testing → Docker/K8s → CI/CD) and **expanded STAR phrasing** that matches these endpoints.
