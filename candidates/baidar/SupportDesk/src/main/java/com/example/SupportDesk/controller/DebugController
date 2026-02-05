@@ -1,0 +1,22 @@
+@RestController
+@RequestMapping("/api/debug")
+public class DebugController {
+    
+    @Autowired
+    private ApplicationContext applicationContext;
+    
+    @GetMapping("/scopes")
+    public ResponseEntity<Map<String, Object>> getBeanScopes() {
+        Map<String, Object> scopeInfo = new HashMap<>();
+        
+        String[] beanNames = applicationContext.getBeanDefinitionNames();
+        for (String beanName : beanNames) {
+            BeanDefinition beanDef = ((ConfigurableApplicationContext) applicationContext)
+                .getBeanFactory()
+                .getBeanDefinition(beanName);
+            scopeInfo.put(beanName, beanDef.getScope());
+        }
+        
+        return ResponseEntity.ok(scopeInfo);
+    }
+}

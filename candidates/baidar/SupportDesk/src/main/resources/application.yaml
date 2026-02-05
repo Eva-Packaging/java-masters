@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: SupportDesk
+    profiles:
+      active: dev
