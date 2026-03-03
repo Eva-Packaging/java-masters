@@ -1,6 +1,5 @@
 package com.frauddetection.claims.dto;
 
-
 import lombok.Data;
 
 import java.time.LocalDate;
