@@ -3,6 +3,7 @@ package com.frauddetection.claims.controller;
 import com.frauddetection.claims.dto.*;
 import com.frauddetection.claims.service.ClaimService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,6 +61,18 @@ public class ClaimController {
     public ResponseEntity<DocumentDownloadUrlResponse> getDownloadUrl(@PathVariable UUID documentId) {
         DocumentDownloadUrlResponse response = claimService.getDownloadUrl(documentId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/claims")
+    public ResponseEntity<Page<ClaimDTO>> searchClaims(
+            @RequestParam(required = false) ClaimStatus status,
+            @RequestParam(required = false) String claimNumber,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "reportedAt,desc") String sort
+    ) {
+        Page<ClaimDTO> claims = claimService.searchClaims(status, claimNumber, page, size, sort);
+        return ResponseEntity.ok(claims);
     }
 
     //Fraud Scoring

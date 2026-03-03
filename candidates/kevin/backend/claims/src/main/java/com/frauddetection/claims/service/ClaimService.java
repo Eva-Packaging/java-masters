@@ -1,6 +1,13 @@
 package com.frauddetection.claims.service;
 
 import com.frauddetection.claims.dto.*;
+import com.frauddetection.claims.entity.Claim;
+import com.frauddetection.claims.mapper.ClaimMapper;
+import com.frauddetection.claims.repo.ClaimRepo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -11,8 +18,17 @@ import java.util.UUID;
 @Service
 public class ClaimService {
 
+    private ClaimRepo claimRepo;
+    /**
+     *
+     * @param req
+     * @return
+     */
     public CreateClaimResponse createClaim(CreateClaimRequest req) {
-        return new CreateClaimResponse();
+        Claim claim = ClaimMapper.toEntity(req);
+        claimRepo.save(claim);
+        //TODO: Also need to produce claim event here after we implement Kafka
+        return ClaimMapper.toResponse(claim);
     }
 
     public ClaimDTO getClaimById(UUID claimId) {
@@ -60,4 +76,26 @@ public class ClaimService {
         return "https://storage.example.com/documents/" + documentId + "?expires=3600";
     }
 
+    public Page<ClaimDTO> searchClaims(ClaimStatus status, String claimNumber, int page, int size, String sort) {
+        String[] sortParams = sort.split(",");
+        String sortField = sortParams[0];
+        String sortDirection = sortParams.length > 1 ? sortParams[1] : "asc";
+
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
+        Page<Claim> claimsPage;
+
+        if (status != null && claimNumber != null) {
+            claimsPage = claimRepo.findByStatusAndClaimNumberContaining(status, claimNumber, pageable);
+        } else if (status != null) {
+            claimsPage = claimRepo.findByStatus(status, pageable);
+        } else if (claimNumber != null) {
+            claimsPage = claimRepo.findByClaimNumberContaining(claimNumber, pageable);
+        } else {
+            claimsPage = claimRepo.findAll(pageable);
+        }
+
+        return claimsPage.map(ClaimMapper::toDTO);
+    }
 }
