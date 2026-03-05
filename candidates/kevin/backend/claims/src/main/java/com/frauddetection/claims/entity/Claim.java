@@ -1,6 +1,8 @@
 package com.frauddetection.claims.entity;
 
 import com.frauddetection.claims.dto.ClaimStatus;
+import com.frauddetection.claims.dto.ClaimType;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,9 +27,6 @@ public class Claim {
     @Column(name = "claim_id")
     private UUID claimId;
 
-    @Column(name = "policy_id", nullable = false)
-    private UUID policyId;
-
     @Column(name = "claimant_id", nullable = false)
     private UUID claimantId;
 
@@ -38,7 +37,8 @@ public class Claim {
     private String claimNumber;
 
     @Column(name = "claim_type", length = 50, nullable = false)
-    private String claimType;
+    @Enumerated(EnumType.STRING)
+    private ClaimType claimType;
 
     @Column(name = "status", length = 30, nullable = false)
     private ClaimStatus status;
@@ -61,6 +61,10 @@ public class Claim {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "policy_id", nullable = false)
+    private Policy policy;
+
     @PrePersist
     protected void onCreate() {
         reportedAt = LocalDateTime.now();
@@ -71,4 +75,5 @@ public class Claim {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
 }

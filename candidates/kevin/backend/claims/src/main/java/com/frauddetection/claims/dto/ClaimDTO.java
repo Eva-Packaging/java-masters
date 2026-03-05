@@ -19,7 +19,7 @@ public class ClaimDTO {
     private UUID policyId;
     private UUID claimantId;
     private String claimNumber;
-    private String claimType;
+    private ClaimType claimType;
     private ClaimStatus status;
     private LocalDate lossDate;
     private LocalDateTime reportedAt;

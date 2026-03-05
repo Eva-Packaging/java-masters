@@ -19,4 +19,6 @@ public class CreateClaimRequest {
     private ClaimantDTO claimant;
     private ClaimStatus status;
     private ClaimType claimType;
+
+    private UUID createdByUserId;
 }

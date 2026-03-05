@@ -37,6 +37,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    defer-datasource-initialization: true
 
   h2:
     console:
@@ -54,15 +55,22 @@ spring:
       on-profile: local
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/claims
+    url: jdbc:postgresql://localhost:5432/claimsdb
     driver-class-name: org.postgresql.Driver
-    username: claims
-    password: claims
+    username: kevin
+    password: kevin
+  
+  sql:
+    init:
+      mode: always
+      platform: postgres
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
+    defer-datasource-initialization: true
+
 
 
 ---
@@ -84,3 +92,6 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+    defer-datasource-initialization: true
+
+    

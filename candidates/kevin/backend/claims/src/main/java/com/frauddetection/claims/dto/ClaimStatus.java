@@ -1,5 +1,6 @@
 package com.frauddetection.claims.dto;
 
 public enum ClaimStatus {
-    IN_REVIEW
+    IN_REVIEW,
+    SUBMITTED
 }

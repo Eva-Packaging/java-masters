@@ -5,6 +5,7 @@ import com.frauddetection.claims.entity.Claim;
 import com.frauddetection.claims.entity.ClaimDocument;
 import com.frauddetection.claims.entity.ClaimStatusHistory;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface ClaimMapper {
@@ -12,16 +13,34 @@ public interface ClaimMapper {
     // ========== Claim Entity Mappers ==========
 
     static Claim toEntity(CreateClaimRequest req) {
-        // TODO: Fill in all fields
+        if (req == null) {
+            return null;
+        }
+
+        BigDecimal lossAmount = req.getLossAmountEstimate() == null
+                ? null
+                : BigDecimal.valueOf(req.getLossAmountEstimate());
+
+        
         return Claim.builder()
+                .claimantId(UUID.randomUUID()) //TODO: add second entity to change 
+                .claimNumber(req.getClaimNumber())
+                .claimType(req.getClaimType())
+                .status(req.getStatus())
+                .lossDate(req.getLossDate())
                 .reportedAt(req.getReportedAt())
+                .lossAmountEstimate(lossAmount)
+                .description(req.getDescription())
+                .regionCode(req.getRegionCode())
+                .createdByUserId(req.getCreatedByUserId())
                 .build();
+
     }
 
     static ClaimDTO toDTO(Claim claim){
         return ClaimDTO.builder()
                 .claimId(claim.getClaimId())
-                .policyId(claim.getPolicyId())
+                .policyId(claim.getPolicy().getId())
                 .claimantId(claim.getClaimantId())
                 .claimNumber(claim.getClaimNumber())
                 .claimType(claim.getClaimType())
@@ -40,6 +59,7 @@ public interface ClaimMapper {
         response.setClaimId(claim.getClaimId());
         response.setClaimNumber(claim.getClaimNumber());
         response.setStatus(claim.getStatus());
+        response.setReportedAt(claim.getReportedAt());
         return response;
     }
 
@@ -78,13 +98,4 @@ public interface ClaimMapper {
         return null;
     }
 
-    static CreateClaimResponse toResponse(Claim claim) {
-        if (claim == null) {
-            return null;
-        }
-
-        CreateClaimResponse response = toCreateClaimResponse(claim);
-        response.setReportedAt(claim.getReportedAt());
-        return response;
-    }
 }

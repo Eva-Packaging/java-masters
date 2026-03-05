@@ -2,8 +2,12 @@ package com.frauddetection.claims.service;
 
 import com.frauddetection.claims.dto.*;
 import com.frauddetection.claims.entity.Claim;
+import com.frauddetection.claims.entity.Policy;
 import com.frauddetection.claims.mapper.ClaimMapper;
 import com.frauddetection.claims.repo.ClaimRepo;
+import com.frauddetection.claims.repo.PolicyRepo;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,16 +23,23 @@ import java.util.UUID;
 public class ClaimService {
 
     private ClaimRepo claimRepo;
-    /**
-     *
-     * @param req
-     * @return
-     */
+
+    private PolicyRepo policyRepo;
+   
+    public ClaimService(ClaimRepo claimRepo, PolicyRepo policyRepo) {
+        this.claimRepo = claimRepo;
+        this.policyRepo = policyRepo;
+    }
+
     public CreateClaimResponse createClaim(CreateClaimRequest req) {
+        // need to query policy from the policyNumber and claimant from the claimant Object
+        Policy policy = policyRepo.findByPolicyNumber(req.getPolicyNumber())
+                .orElseThrow(() -> new RuntimeException("Policy not found: " + req.getPolicyNumber()));
         Claim claim = ClaimMapper.toEntity(req);
+        claim.setPolicy(policy);
         claimRepo.save(claim);
         //TODO: Also need to produce claim event here after we implement Kafka
-        return ClaimMapper.toResponse(claim);
+        return ClaimMapper.toCreateClaimResponse(claim);
     }
 
     public ClaimDTO getClaimById(UUID claimId) {
