@@ -3,6 +3,7 @@ package com.frauddetection.claims.service;
 import com.frauddetection.claims.dto.*;
 import com.frauddetection.claims.entity.Claim;
 import com.frauddetection.claims.entity.Policy;
+import com.frauddetection.claims.exception.ClaimNotFoundException;
 import com.frauddetection.claims.mapper.ClaimMapper;
 import com.frauddetection.claims.repo.ClaimRepo;
 import com.frauddetection.claims.repo.PolicyRepo;
@@ -43,7 +44,9 @@ public class ClaimService {
     }
 
     public ClaimDTO getClaimById(UUID claimId) {
-        return new ClaimDTO();
+        Claim claim = claimRepo.findById(claimId)
+                .orElseThrow(() -> new ClaimNotFoundException("Claim not found: " + claimId));
+        return ClaimMapper.toDTO(claim);
     }
 
     public ClaimDTO updateStatus(UUID claimId, UpdateStatusRequest req) {

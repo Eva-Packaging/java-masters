@@ -25,11 +25,11 @@ public class ClaimController {
         CreateClaimResponse response = claimService.createClaim(req);
         return ResponseEntity.status(201).body(response);
     }
-
+    
+    //TODO: working on this now
     @GetMapping("/claims/{claimId}")
-    public ResponseEntity<ClaimDTO> getClaims(@PathVariable UUID claimId) {
+    public ResponseEntity<ClaimDTO> getClaim(@PathVariable UUID claimId) {
         ClaimDTO claimDTO = claimService.getClaimById(claimId);
-
         return ResponseEntity.status(200).body(claimDTO);
     }
 
@@ -46,7 +46,7 @@ public class ClaimController {
     }
 
     @PostMapping("/claims/{claimId}/documents")
-    public ResponseEntity<EvidenceMetaDataResponse> uploadEvidenceMetaData(@RequestBody EvidenceMetaDataUpload evidenceMetaDataUpload,@PathVariable UUID claimId){
+    public ResponseEntity<EvidenceMetaDataResponse> uploadEvidenceMetaData(@RequestBody EvidenceMetaDataUpload  evidenceMetaDataUpload,@PathVariable UUID claimId){
         EvidenceMetaDataResponse metaDataResponse = claimService.uploadEvidenceMetaData(evidenceMetaDataUpload, claimId);
         return ResponseEntity.status(201).body(metaDataResponse);
     }

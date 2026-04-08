@@ -55,10 +55,10 @@ spring:
       on-profile: local
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/claimsdb
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/claimsdb}
     driver-class-name: org.postgresql.Driver
-    username: kevin
-    password: kevin
+    username: ${DATABASE_USER:kevin}
+    password: ${DATABASE_PASSWORD:kevin}
   
   sql:
     init:
